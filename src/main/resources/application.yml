@@ -10,30 +10,22 @@ spring:
     username: postgres
     password: postgres
     hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
+      maximum-pool-size: 100
+      minimum-idle: 40
       idle-timeout: 30000
-      connection-timeout: 2000
+      connection-timeout: 10000
       max-lifetime: 1800000
-
-
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: false
+      ddl-auto: create-drop
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info,prometheus
-  endpoint:
-    health:
-      show-details: always
+
   metrics:
     distribution:
       percentiles-histogram:
