@@ -5,10 +5,14 @@ import { Trend } from 'k6/metrics';
 const createTime = new Trend('create_time');
 const redirectTime = new Trend('redirect_time');
 const invalidTime = new Trend('invalid_time');
+const waitingTime = new Trend('waiting_time');
 
 export const options = {
     vus: 200,
     duration: '30s',
+    thresholds: {
+        'http_req_waiting': ['p(95)>0'],
+    },
 };
 
 export function setup() {
@@ -50,6 +54,7 @@ export default function (keys) {
         );
 
         redirectTime.add(res.timings.duration);
+        waitingTime.add(res.timings.waiting);
 
         check(res, { 'valid redirect 302': r => r.status === 302 });
 
@@ -63,6 +68,7 @@ export default function (keys) {
         );
 
         invalidTime.add(res.timings.duration);
+        waitingTime.add(res.timings.waiting);
 
         check(res, { 'invalid redirect 404': r => r.status === 404 });
 
