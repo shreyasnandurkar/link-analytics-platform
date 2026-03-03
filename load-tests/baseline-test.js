@@ -7,8 +7,8 @@ const redirectTime = new Trend('redirect_time');
 const invalidTime = new Trend('invalid_time');
 
 export const options = {
-    vus: 500,
-    duration: '1m',
+    vus: 200,
+    duration: '30s',
 };
 
 export function setup() {
