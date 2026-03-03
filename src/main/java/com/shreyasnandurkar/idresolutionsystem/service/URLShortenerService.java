@@ -35,7 +35,6 @@
 
         @Transactional
         public String redirectUrl(String shortKey){
-            System.out.println("Looking for key: " + shortKey);
             Optional<WebsiteUrl> entity =
                     Optional.ofNullable(repository.findByShortKey(shortKey));
 
