@@ -4,21 +4,23 @@
     import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
     import com.shreyasnandurkar.idresolutionsystem.entity.WebsiteUrl;
     import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
-    import jakarta.transaction.Transactional;
-    import org.springframework.http.HttpStatus;
     import org.springframework.stereotype.Service;
-    import org.springframework.web.server.ResponseStatusException;
+    import org.springframework.transaction.annotation.Transactional;
 
-    import java.util.Optional;
 
     @Service
     public class URLShortenerService {
         private final AppProperties appProperties;
         private final WebsiteUrlRepository repository;
+        private final CounterService counterService;
+        private final UrlLookupService urlLookupService;
 
-        public URLShortenerService(AppProperties appProperties, WebsiteUrlRepository repository) {
+        public URLShortenerService(AppProperties appProperties, WebsiteUrlRepository repository,
+                                   CounterService counterService, UrlLookupService urlLookupService) {
             this.appProperties = appProperties;
             this.repository = repository;
+            this.counterService = counterService;
+            this.urlLookupService = urlLookupService;
         }
 
         @Transactional
@@ -33,16 +35,9 @@
             return appProperties.getBaseUrl() + "/" + key;
         }
 
-        @Transactional
         public String redirectUrl(String shortKey){
-            Optional<WebsiteUrl> entity =
-                    Optional.ofNullable(repository.findByShortKey(shortKey));
-
-            if(entity.isEmpty())
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid URL");
-
-            entity.get().increaseRedirectCount();
-            repository.save(entity.get());
-            return entity.get().getOriginalUrl();
+            String originalUrl = urlLookupService.getOriginalUrl(shortKey);
+            counterService.incrementRedirectCount(shortKey);
+            return originalUrl;
         }
     }
