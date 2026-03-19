@@ -20,11 +20,17 @@ spring:
     hibernate:
       ddl-auto: create-drop
 
+    properties:
+      hibernate:
+        generate_statistics: true
+
+
 management:
   endpoints:
     web:
       exposure:
         include: metrics,health,info,prometheus
+
 
   metrics:
     distribution:
@@ -32,3 +38,9 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5,0.95,0.99
+
+logging:
+  level:
+    org:
+      hibernate:
+        stat: DEBUG
