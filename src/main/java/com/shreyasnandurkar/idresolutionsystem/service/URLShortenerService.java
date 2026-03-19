@@ -4,6 +4,7 @@
     import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
     import com.shreyasnandurkar.idresolutionsystem.entity.WebsiteUrl;
     import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
+    import org.springframework.dao.DuplicateKeyException;
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +26,13 @@
 
         @Transactional
         public String createShortLink(String originalUrl, LinkType type){
-            String key;
-            do {
-                key = ShortKeyGenerator.generateShortKey();
-            } while (repository.existsByShortKey(key));
-
-            WebsiteUrl entity = new WebsiteUrl(originalUrl, key, type);
-            repository.save(entity);
-            return appProperties.getBaseUrl() + "/" + key;
+            while (true) {
+                String key = ShortKeyGenerator.generateShortKey();
+                try {
+                    repository.save(new WebsiteUrl(originalUrl, key, type));
+                    return appProperties.getBaseUrl() + "/" + key;
+                } catch (DuplicateKeyException ignored) {}
+            }
         }
 
         public String redirectUrl(String shortKey){
