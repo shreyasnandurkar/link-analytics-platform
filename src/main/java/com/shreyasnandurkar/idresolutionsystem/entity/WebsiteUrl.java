@@ -30,7 +30,7 @@ public class WebsiteUrl {
     private LinkType type;
 
     @Column(nullable = false)
-    private Long redirectCount = 0L;
+    private int redirectCount;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -40,14 +40,11 @@ public class WebsiteUrl {
         this.originalUrl = originalUrl;
         this.shortKey = shortKey;
         this.type = type;
+        this.redirectCount = 0;
     }
 
     @PrePersist
     public void prePersist(){
         this.createdAt = LocalDateTime.now();
-    }
-
-    public void increaseRedirectCount(){
-        this.redirectCount++;
     }
 }
