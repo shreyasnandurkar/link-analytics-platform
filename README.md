@@ -1,6 +1,6 @@
-## Link Analytics Platform
+## GoLinkGone
 
-A **high-performance URL shortening and analytics system** built with Spring Boot, engineered for **low-latency redirects**, **efficient tracking**, and **scalable data handling**.
+A high-performance URL shortening and analytics system built with Spring Boot, engineered for low-latency redirects, efficient tracking, and scalable data handling.
 
 ---
 
@@ -12,11 +12,13 @@ A **high-performance URL shortening and analytics system** built with Spring Boo
 * Compact, collision-resistant identifiers
 * Optimized for fast resolution
 
-### 📊 Analytics Tracking
+### 📊 Advanced Analytics and Geo-Tracking
 
 * **Asynchronous redirect counting**
-* Eliminates latency overhead during link resolution
-* Designed for high-throughput systems
+* Asynchronous click event tracking eliminates latency overhead during link resolution.
+* Integrates with external Geo-IP services to track visitor continent, country, and city data.
+* Uses SHA-256 IP address hashing to maintain visitor privacy while accurately differentiating between new and returning visitors.
+* Executes complex time-series data bucketing and geographic distribution aggregations via native SQL queries.
 
 ### 🧾 Visual Identifiers
 
@@ -28,36 +30,25 @@ A **high-performance URL shortening and analytics system** built with Spring Boo
 
 ### ⚡ High Performance
 
-* Uses **time-ordered epoch UUIDs**
-* Benefits:
+* Uses time-ordered epoch UUIDs for primary keys, benefiting index locality and insert speeds.
+* In-memory KeyStore using a ConcurrentHashMap pre-loads all short keys at startup, ensuring O(1) collision checks and immediate rejection of invalid URLs without querying the database.
+* Custom asynchronous ThreadPoolTaskExecutor automatically tuned to match the Hikari connection pool size to prevent thread exhaustion during high-throughput analytics processing.
 
-  * Better index locality
-  * Faster inserts
-  * Efficient queries
+### 🧠 Multi-Layer Caching
 
-### 🧠 Caching
-
-* Implemented using **ConcurrentMapCacheManager**
-* Reduces database load for frequently accessed links
-
-### 📈 Monitoring
-
-* Integrated:
-
-  * **Spring Boot Actuator**
-  * **Prometheus metrics**
-  * **Hibernate statistics**
-
+* ConcurrentMapCacheManager caches resolved URLs to minimize database reads for frequently accessed links.
+* Caffeine cache implementation stores Geo-IP lookup results for 24 hours to prevent rate-limiting and eliminate redundant external API calls.
+  
 ---
 
 ## 🛠 Tech Stack
 
-* **Language:** Java 21
+* **Language:** Java 17+
 * **Framework:** Spring Boot 4.0.3
 * **Database:** PostgreSQL
 * **Persistence:** Spring Data JPA / Hibernate
-* **Caching:** Spring Cache
-* **Utilities:** Lombok, ZXing, UUID-Creator
+* **Caching:** Spring Cache, Caffeine
+* **Utilities:** Lombok, ZXing, UUID-Creator, Google Guava
 * **Testing:** k6 (Load Testing)
 
 ---
@@ -139,26 +130,6 @@ GET    /health       → Health check
 GET    /info         → Application info
 ```
 
----
-
-## 📊 Analytics & Monitoring
-
-### Prometheus Metrics
-
-Available at:
-
-```
-/actuator/prometheus
-```
-
-Includes:
-
-* Request latency percentiles:
-
-  * P50
-  * P95
-  * P99
-
 ### Hibernate Statistics
 
 * Enabled for query performance debugging
@@ -200,10 +171,6 @@ load-tests/baseline-test.js
 * **Cache-First Reads**
 
   * Hot keys served without database access
-
-* **Built-in Observability**
-
-  * Metrics and stats available by default
 
 ---
 
