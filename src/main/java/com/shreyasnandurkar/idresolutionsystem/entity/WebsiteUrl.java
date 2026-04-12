@@ -11,7 +11,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "website_url",
-        indexes = @Index(name = "idx_short_key", columnList = "shortKey")
+        indexes = @Index(name = "idx_short_key", columnList = "short_Key")
 )
 @Getter
 @NoArgsConstructor
