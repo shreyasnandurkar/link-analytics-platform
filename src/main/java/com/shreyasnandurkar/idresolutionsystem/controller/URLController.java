@@ -6,12 +6,14 @@ import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
 import com.shreyasnandurkar.idresolutionsystem.service.BarcodeService;
 import com.shreyasnandurkar.idresolutionsystem.service.QRCodeService;
 import com.shreyasnandurkar.idresolutionsystem.service.URLShortenerService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
 
 @RestController
 //@RequestMapping("/v1")
@@ -43,8 +45,11 @@ public class URLController {
     }
 
     @GetMapping("/{shortKey}")
-    public ResponseEntity<Void> redirectUrl(@PathVariable String shortKey){
-        String originalUrl = urlShortenerService.redirectUrl(shortKey);
+    public ResponseEntity<Void> redirectUrl(@PathVariable String shortKey, HttpServletRequest request){
+        String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
+                .map(x -> x.split(",")[0].trim())
+                .orElse(request.getRemoteAddr());
+        String originalUrl = urlShortenerService.redirectUrl(shortKey, ip);
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(originalUrl)).build();
     }
 
