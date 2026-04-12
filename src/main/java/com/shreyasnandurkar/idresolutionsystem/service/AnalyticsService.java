@@ -63,7 +63,7 @@ public class AnalyticsService {
     }
 
     @Autowired
-    public void setSelf(AnalyticsService self) {
+    public void setSelf(@Lazy AnalyticsService self) {
         this.self = self;
     }
 }
