@@ -29,9 +29,6 @@ public class WebsiteUrl {
     @Enumerated(EnumType.STRING)
     private LinkType type;
 
-    @Column(nullable = false)
-    private int redirectCount;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -40,7 +37,6 @@ public class WebsiteUrl {
         this.originalUrl = originalUrl;
         this.shortKey = shortKey;
         this.type = type;
-        this.redirectCount = 0;
     }
 
     @PrePersist
