@@ -7,7 +7,7 @@
     import com.shreyasnandurkar.idresolutionsystem.exception.ShortKeyNotFoundException;
     import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
     import lombok.extern.slf4j.Slf4j;
-    import org.springframework.dao.DuplicateKeyException;
+    import org.springframework.dao.DataIntegrityViolationException;
     import org.springframework.stereotype.Service;
 
     @Service
@@ -36,14 +36,19 @@
                 String candidate = ShortKeyGenerator.generateShortKey();
 
                 if (keyStore.contains(candidate)) continue;
+                keyStore.addKey(candidate);
 
                 try {
                     repository.save(new WebsiteUrl(originalUrl, candidate, type));
-                    keyStore.addKey(candidate);
                     shortKey = candidate;
                     saved = true;
-                } catch (DuplicateKeyException e) {
+                } catch (DataIntegrityViolationException e) {
+                    keyStore.removeKey(candidate);
                     log.debug("Short-key collision on '{}', retrying.", candidate);
+                } catch (Exception e){
+                    keyStore.removeKey(candidate);
+                    log.error("Error while saving short-key: {}", e.getMessage());
+                    throw e;
                 }
             }
 
