@@ -36,6 +36,18 @@ public class AnalyticsService {
         self.persistClick(shortKey, ipHash, location);
     }
 
+    @Transactional
+    public void persistClick(String shortKey, String ipHash, GeoLocation location) {
+        boolean isNew = tryInsertFingerprint(shortKey, ipHash);
+        clickEventRepository.save(new ClickEvent(
+                shortKey,
+                ipHash,
+                location.city(),
+                location.country(),
+                isNew
+        ));
+    }
+
     private boolean tryInsertFingerprint(String shortKey, String ipHash) {
         try{
             fingerprintRepository.save(new VisitorFingerprint(shortKey, ipHash));
@@ -48,18 +60,6 @@ public class AnalyticsService {
 
     private String hashIpAddress(String rawIp){
         return Hashing.sha256().hashString(rawIp, StandardCharsets.UTF_8).toString();
-    }
-
-    @Transactional
-    public void persistClick(String shortKey, String ipHash, GeoLocation location) {
-        boolean isNew = tryInsertFingerprint(shortKey, ipHash);
-        clickEventRepository.save(new ClickEvent(
-                shortKey,
-                ipHash,
-                location.city(),
-                location.country(),
-                isNew
-        ));
     }
 
     @Autowired
