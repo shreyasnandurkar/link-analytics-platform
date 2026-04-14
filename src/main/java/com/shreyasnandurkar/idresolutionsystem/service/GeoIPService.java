@@ -28,14 +28,10 @@ public class GeoIPService {
 
     public GeoLocation lookup(String ip) {
         GeoLocation cached = successCache.getIfPresent(ip);
-        if (cached != null) {
-            return cached;
-        }
+        if (cached != null)return cached;
 
         GeoLocation failed = failureCache.getIfPresent(ip);
-        if (failed != null) {
-            return failed;
-        }
+        if (failed != null)return failed;
 
         try {
             String url = "http://ip-api.com/json/" + ip + "?fields=81945";
