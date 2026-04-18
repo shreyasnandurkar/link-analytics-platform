@@ -18,11 +18,15 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
 
     properties:
       hibernate:
         generate_statistics: true
+
+  threads:
+    virtual:
+      enabled: true
 
 
 management:
