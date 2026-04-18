@@ -11,7 +11,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "click_event", indexes = {
         @Index(name = "idx_click_short_key_clicked_at", columnList = "short_key, clicked_at"),
-        @Index(name = "idx_click_clicked_at", columnList = "clicked_at")
+        @Index(name = "idx_click_sk_ca_country", columnList = "short_key, clicked_at, country, new_visitor"),
+        @Index(name = "idx_click_sk_ca_city", columnList = "short_key, clicked_at, city, country, new_visitor")
 })
 @Getter
 @NoArgsConstructor
