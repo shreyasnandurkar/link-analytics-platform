@@ -2,8 +2,10 @@ package com.shreyasnandurkar.idresolutionsystem.controller;
 
 import com.google.zxing.WriterException;
 import com.shreyasnandurkar.idresolutionsystem.entity.CreateRequest;
+import com.shreyasnandurkar.idresolutionsystem.entity.DashboardResponse;
 import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
 import com.shreyasnandurkar.idresolutionsystem.service.BarcodeService;
+import com.shreyasnandurkar.idresolutionsystem.service.DashboardService;
 import com.shreyasnandurkar.idresolutionsystem.service.QRCodeService;
 import com.shreyasnandurkar.idresolutionsystem.service.URLShortenerService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,11 +23,14 @@ public class URLController {
     private final URLShortenerService urlShortenerService;
     private final QRCodeService qrCodeService;
     private final BarcodeService barcodeService;
+    private final DashboardService dashboardService;
 
-    public URLController(URLShortenerService urlShortenerService, QRCodeService qrCodeService, BarcodeService barcodeService) {
+    public URLController(URLShortenerService urlShortenerService, QRCodeService qrCodeService,
+                         BarcodeService barcodeService, DashboardService dashboardService) {
         this.urlShortenerService = urlShortenerService;
         this.qrCodeService = qrCodeService;
         this.barcodeService = barcodeService;
+        this.dashboardService = dashboardService;
     }
 
     @GetMapping("/health")
@@ -66,5 +71,10 @@ public class URLController {
         String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.BARCODE);
         byte[]barcode = barcodeService.generateBarcode(shortUrl, 200, 200);
         return ResponseEntity.ok().header("Content-Type", "image/png").body(barcode);
+    }
+
+    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String shortKey, @RequestParam(defaultValue = "24h") String timeRange){
+        DashboardResponse response = dashboardService.getAnalytics(shortKey, timeRange);
+        return ResponseEntity.ok(response);
     }
 }
