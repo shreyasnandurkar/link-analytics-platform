@@ -29,7 +29,7 @@ public class AnalyticsService {
         this.geoIPService = geoIPService;
     }
 
-    @Async
+    @Async("analyticsExecutor")
     public void recordClick(String shortKey, String rawIp) {
         String ipHash = hashIpAddress(rawIp);
         GeoLocation location = geoIPService.lookup(rawIp);
