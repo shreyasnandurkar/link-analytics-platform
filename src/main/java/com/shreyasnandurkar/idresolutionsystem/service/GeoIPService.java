@@ -4,9 +4,11 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.shreyasnandurkar.idresolutionsystem.entity.GeoLocation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Map;
 
@@ -15,7 +17,18 @@ import java.util.Map;
 public class GeoIPService {
 
     private final GeoLocation UNKNOWN  = new GeoLocation("UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", false);
-    private final RestClient restClient = RestClient.create();
+
+    private final RestClient restClient = RestClient.builder().requestFactory(buildRequestFactory()).build();
+
+    private static JdkClientHttpRequestFactory buildRequestFactory() {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(2))
+                .build();
+
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(Duration.ofSeconds(2));
+        return factory;
+    }
 
     private final Cache<String, GeoLocation> successCache = Caffeine.newBuilder()
             .maximumSize(10_000)
@@ -43,15 +56,13 @@ public class GeoIPService {
                 return cacheAndReturn(failureCache, ip, UNKNOWN);
             }
 
-            Object mobileRaw = resp.get("mobile");
-            boolean mobile = Boolean.TRUE.equals(mobileRaw);
-
             GeoLocation location = new GeoLocation(
                     asString(resp.get("continent")),
                     asString(resp.get("country")),
                     asString(resp.get("regionName")),
                     asString(resp.get("city")),
-                    mobile
+                    Boolean.TRUE.equals(resp.get("mobile"))
+
             );
 
             return cacheAndReturn(successCache, ip, location);
