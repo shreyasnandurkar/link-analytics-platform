@@ -1,10 +1,9 @@
 package com.shreyasnandurkar.idresolutionsystem.config;
 
-import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
@@ -12,15 +11,17 @@ import java.util.concurrent.Executor;
 @EnableAsync
 public class AsyncConfig {
 
-    @Bean(name = "taskExecutor")
-    public Executor taskExecutor(HikariDataSource dataSource) {
-        int maxPoolSize = dataSource.getMaximumPoolSize();
+    @Bean("analyticsExecutor")
+    public Executor analyticsExecutor() {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("analytics-vt-");
+        executor.setVirtualThreads(true);
+        return executor;
+    }
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(maxPoolSize);
-        executor.setMaxPoolSize(maxPoolSize);
-        executor.setThreadNamePrefix("URL-Async-");
-        executor.initialize();
+    @Bean("dashboardExecutor")
+    public Executor dashboardExecutor() {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("dashboard-vt-");
+        executor.setVirtualThreads(true);
         return executor;
     }
 }
