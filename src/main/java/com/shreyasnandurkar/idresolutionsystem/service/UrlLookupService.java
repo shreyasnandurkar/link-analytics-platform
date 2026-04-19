@@ -17,9 +17,9 @@ public class UrlLookupService {
     }
 
     @Cacheable(value = "urlCache", key = "#shortKey")
-    public String getOriginalUrl(String shortKey){
+    public String getOriginalUrl(String shortKey) {
         WebsiteUrl entity = repository.findByShortKey(shortKey);
-        if(entity==null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid URL");
+        if (entity == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid URL");
         return entity.getOriginalUrl();
     }
 }

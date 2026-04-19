@@ -49,16 +49,15 @@ public class AnalyticsService {
     }
 
     private boolean tryInsertFingerprint(String shortKey, String ipHash) {
-        try{
+        try {
             fingerprintRepository.save(new VisitorFingerprint(shortKey, ipHash));
             return true;
-        }
-        catch (DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             return false;
         }
     }
 
-    private String hashIpAddress(String rawIp){
+    private String hashIpAddress(String rawIp) {
         return Hashing.sha256().hashString(rawIp, StandardCharsets.UTF_8).toString();
     }
 

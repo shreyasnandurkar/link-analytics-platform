@@ -32,7 +32,7 @@ public class WebsiteUrl {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public WebsiteUrl(String originalUrl, String shortKey,LinkType type) {
+    public WebsiteUrl(String originalUrl, String shortKey, LinkType type) {
         this.linkId = UuidCreator.getTimeOrderedEpoch();
         this.originalUrl = originalUrl;
         this.shortKey = shortKey;
@@ -40,7 +40,7 @@ public class WebsiteUrl {
     }
 
     @PrePersist
-    public void prePersist(){
+    public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
 }

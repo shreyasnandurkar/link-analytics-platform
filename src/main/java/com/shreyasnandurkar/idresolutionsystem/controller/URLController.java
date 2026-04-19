@@ -34,23 +34,23 @@ public class URLController {
     }
 
     @GetMapping("/health")
-    public ResponseEntity<String> healthCheck(){
+    public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("OK");
     }
 
     @GetMapping("/info")
-    public ResponseEntity<String> info(){
+    public ResponseEntity<String> info() {
         return ResponseEntity.ok("This is a URL Shortener API");
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<String> createShortLink(@RequestBody CreateRequest request){
+    public ResponseEntity<String> createShortLink(@RequestBody CreateRequest request) {
         String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.SHORT_LINK);
         return ResponseEntity.ok(shortUrl);
     }
 
     @GetMapping("/{shortKey}")
-    public ResponseEntity<Void> redirectUrl(@PathVariable String shortKey, HttpServletRequest request){
+    public ResponseEntity<Void> redirectUrl(@PathVariable String shortKey, HttpServletRequest request) {
         String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
                 .map(x -> x.split(",")[0].trim())
                 .orElse(request.getRemoteAddr());
@@ -69,11 +69,11 @@ public class URLController {
     public ResponseEntity<byte[]> createBarCode(@RequestBody CreateRequest request) throws IOException,
             WriterException {
         String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.BARCODE);
-        byte[]barcode = barcodeService.generateBarcode(shortUrl, 200, 200);
+        byte[] barcode = barcodeService.generateBarcode(shortUrl, 200, 200);
         return ResponseEntity.ok().header("Content-Type", "image/png").body(barcode);
     }
 
-    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String shortKey, @RequestParam(defaultValue = "24h") String timeRange){
+    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String shortKey, @RequestParam(defaultValue = "24h") String timeRange) {
         DashboardResponse response = dashboardService.getAnalytics(shortKey, timeRange);
         return ResponseEntity.ok(response);
     }

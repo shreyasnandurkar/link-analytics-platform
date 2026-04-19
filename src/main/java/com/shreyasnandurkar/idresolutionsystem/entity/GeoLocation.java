@@ -6,5 +6,5 @@ public record GeoLocation(
         String regionName,
         String city,
         Boolean mobile
-)
-{}
+) {
+}

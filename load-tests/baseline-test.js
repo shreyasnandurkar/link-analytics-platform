@@ -1,6 +1,6 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
-import { Trend } from 'k6/metrics';
+import {check, sleep} from 'k6';
+import {Trend} from 'k6/metrics';
 
 /* -------------------- Response Classification -------------------- */
 
@@ -9,7 +9,7 @@ import { Trend } from 'k6/metrics';
   Only real failures (timeouts, 5xx, connection issues) count as http_req_failed.
 */
 http.setResponseCallback(
-    http.expectedStatuses({ min: 200, max: 399 }, 404)
+    http.expectedStatuses({min: 200, max: 399}, 404)
 );
 
 /* -------------------- Custom Metrics -------------------- */
@@ -21,9 +21,9 @@ const invalidTime = new Trend('invalid_time', true);
 
 export const options = {
     stages: [
-        { duration: '5s', target: 1000 },
-        { duration: '30s', target: 1000 },
-        { duration: '5s', target: 0 },
+        {duration: '5s', target: 1000},
+        {duration: '30s', target: 1000},
+        {duration: '5s', target: 0},
     ],
     setupTimeout: '180s',
 };
@@ -42,8 +42,8 @@ export function setup() {
             'http://localhost:8080/shorten',
             payload,
             {
-                headers: { 'Content-Type': 'application/json' },
-                tags: { type: 'setup' },
+                headers: {'Content-Type': 'application/json'},
+                tags: {type: 'setup'},
             }
         );
 
@@ -56,7 +56,7 @@ export function setup() {
     }
 
     for (const key of keys) {
-        http.get(`http://localhost:8080/${key}`, { redirects: 0 });
+        http.get(`http://localhost:8080/${key}`, {redirects: 0});
     }
 
     return keys;
@@ -76,7 +76,7 @@ export default function (keys) {
             `http://localhost:8080/${randomKey}`,
             {
                 redirects: 0,
-                tags: { type: 'redirect' },
+                tags: {type: 'redirect'},
             }
         );
 
@@ -96,7 +96,7 @@ export default function (keys) {
             `http://localhost:8080/${fakeKey}`,
             {
                 redirects: 0,
-                tags: { type: 'invalid' },
+                tags: {type: 'invalid'},
             }
         );
 

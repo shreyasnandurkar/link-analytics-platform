@@ -25,15 +25,15 @@ public class KeyStore {
         keySet.addAll(keys);
     }
 
-    public void addKey(String key){
+    public void addKey(String key) {
         keySet.add(key);
     }
 
-    public boolean contains(String key){
+    public boolean contains(String key) {
         return keySet.contains(key);
     }
 
-    public void removeKey(String key){
+    public void removeKey(String key) {
         keySet.remove(key);
     }
 }

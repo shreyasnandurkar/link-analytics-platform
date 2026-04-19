@@ -24,7 +24,7 @@ public class ClickEvent {
     @Column(name = "short_key", nullable = false)
     private String shortKey;
 
-    @Column(name="clicked_at", nullable = false)
+    @Column(name = "clicked_at", nullable = false)
     private LocalDateTime clickedAt;
 
     @Column(name = "ip_address_hash")

@@ -3,14 +3,17 @@ package com.shreyasnandurkar.idresolutionsystem.service;
 import java.security.SecureRandom;
 
 public class ShortKeyGenerator {
-
     private static final SecureRandom random = new SecureRandom();
 
-    public static String generateShortKey(){
+    private ShortKeyGenerator() {
+        /* This utility class should not be instantiated */
+    }
+
+    public static String generateShortKey() {
         StringBuilder shortKey = new StringBuilder(6);
-        String CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        final String CHAR_SET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (int i = 0; i < 6; i++) {
-            shortKey.append(CHARS.charAt(random.nextInt(CHARS.length())));
+            shortKey.append(CHAR_SET.charAt(random.nextInt(CHAR_SET.length())));
         }
         return shortKey.toString();
     }

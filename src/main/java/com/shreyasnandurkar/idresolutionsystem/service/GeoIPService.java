@@ -16,9 +16,17 @@ import java.util.Map;
 @Service
 public class GeoIPService {
 
-    private final GeoLocation UNKNOWN  = new GeoLocation("UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", false);
+    private final GeoLocation UNKNOWN = new GeoLocation("UNKNOWN", "UNKNOWN", "UNKNOWN", "UNKNOWN", false);
 
     private final RestClient restClient = RestClient.builder().requestFactory(buildRequestFactory()).build();
+    private final Cache<String, GeoLocation> successCache = Caffeine.newBuilder()
+            .maximumSize(10_000)
+            .expireAfterWrite(Duration.ofHours(24))
+            .build();
+    private final Cache<String, GeoLocation> failureCache = Caffeine.newBuilder()
+            .maximumSize(5_000)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
 
     private static JdkClientHttpRequestFactory buildRequestFactory() {
         HttpClient httpClient = HttpClient.newBuilder()
@@ -30,21 +38,12 @@ public class GeoIPService {
         return factory;
     }
 
-    private final Cache<String, GeoLocation> successCache = Caffeine.newBuilder()
-            .maximumSize(10_000)
-            .expireAfterWrite(Duration.ofHours(24))
-            .build();
-    private final Cache<String, GeoLocation> failureCache = Caffeine.newBuilder()
-            .maximumSize(5_000)
-            .expireAfterWrite(Duration.ofMinutes(5))
-            .build();
-
     public GeoLocation lookup(String ip) {
         GeoLocation cached = successCache.getIfPresent(ip);
-        if (cached != null)return cached;
+        if (cached != null) return cached;
 
         GeoLocation failed = failureCache.getIfPresent(ip);
-        if (failed != null)return failed;
+        if (failed != null) return failed;
 
         try {
             String url = "http://ip-api.com/json/" + ip + "?fields=81945";

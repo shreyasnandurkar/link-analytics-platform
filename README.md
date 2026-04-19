@@ -1,6 +1,7 @@
 ## GoLinkGone
 
-A high-performance URL shortening and analytics system built with Spring Boot, engineered for low-latency redirects, efficient tracking, and scalable data handling.
+A high-performance URL shortening and analytics system built with Spring Boot, engineered for low-latency redirects,
+efficient tracking, and scalable data handling.
 
 ---
 
@@ -17,28 +18,32 @@ A high-performance URL shortening and analytics system built with Spring Boot, e
 * **Asynchronous redirect counting**
 * Asynchronous click event tracking eliminates latency overhead during link resolution.
 * Integrates with external Geo-IP services to track visitor continent, country, and city data.
-* Uses SHA-256 IP address hashing to maintain visitor privacy while accurately differentiating between new and returning visitors.
+* Uses SHA-256 IP address hashing to maintain visitor privacy while accurately differentiating between new and returning
+  visitors.
 * Executes complex time-series data bucketing and geographic distribution aggregations via native SQL queries.
 
 ### 🧾 Visual Identifiers
 
 * Generate:
 
-  * **QR Codes**
-  * **Barcodes**
+    * **QR Codes**
+    * **Barcodes**
 * Enables seamless offline-to-online interaction
 
 ### ⚡ High Performance
 
 * Uses time-ordered epoch UUIDs for primary keys, benefiting index locality and insert speeds.
-* In-memory KeyStore using a ConcurrentHashMap pre-loads all short keys at startup, ensuring O(1) collision checks and immediate rejection of invalid URLs without querying the database.
-* Custom asynchronous ThreadPoolTaskExecutor automatically tuned to match the Hikari connection pool size to prevent thread exhaustion during high-throughput analytics processing.
+* In-memory KeyStore using a ConcurrentHashMap pre-loads all short keys at startup, ensuring O(1) collision checks and
+  immediate rejection of invalid URLs without querying the database.
+* Custom asynchronous ThreadPoolTaskExecutor automatically tuned to match the Hikari connection pool size to prevent
+  thread exhaustion during high-throughput analytics processing.
 
 ### 🧠 Multi-Layer Caching
 
 * ConcurrentMapCacheManager caches resolved URLs to minimize database reads for frequently accessed links.
-* Caffeine cache implementation stores Geo-IP lookup results for 24 hours to prevent rate-limiting and eliminate redundant external API calls.
-  
+* Caffeine cache implementation stores Geo-IP lookup results for 24 hours to prevent rate-limiting and eliminate
+  redundant external API calls.
+
 ---
 
 ## 🛠 Tech Stack
@@ -161,16 +166,16 @@ load-tests/baseline-test.js
 
 * **Optimized Redirect Path**
 
-  * Minimal processing on request path
-  * Analytics handled asynchronously
+    * Minimal processing on request path
+    * Analytics handled asynchronously
 
 * **Efficient ID Strategy**
 
-  * Time-ordered UUIDs reduce index fragmentation
+    * Time-ordered UUIDs reduce index fragmentation
 
 * **Cache-First Reads**
 
-  * Hot keys served without database access
+    * Hot keys served without database access
 
 ---
 

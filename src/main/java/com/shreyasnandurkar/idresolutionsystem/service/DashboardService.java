@@ -1,9 +1,9 @@
 package com.shreyasnandurkar.idresolutionsystem.service;
 
-import com.shreyasnandurkar.idresolutionsystem.entity.DashboardResponse;
 import com.shreyasnandurkar.idresolutionsystem.entity.CityStats;
 import com.shreyasnandurkar.idresolutionsystem.entity.ClickStats;
 import com.shreyasnandurkar.idresolutionsystem.entity.CountryStats;
+import com.shreyasnandurkar.idresolutionsystem.entity.DashboardResponse;
 import com.shreyasnandurkar.idresolutionsystem.repository.ClickEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -62,13 +62,14 @@ public class DashboardService {
         LocalDateTime to = LocalDateTime.now();
         return switch (timeRange.toLowerCase()) {
             case "24h" -> new TimeWindow(to.minusHours(24), to, "hour");
-            case "7d"  -> new TimeWindow(to.minusDays(7),   to, "day");
-            case "30d" -> new TimeWindow(to.minusDays(30),  to, "day");
+            case "7d" -> new TimeWindow(to.minusDays(7), to, "day");
+            case "30d" -> new TimeWindow(to.minusDays(30), to, "day");
             case "all" -> new TimeWindow(LocalDateTime.of(1970, 1, 1, 0, 0), to, "month");
-            default    -> throw new IllegalArgumentException(
+            default -> throw new IllegalArgumentException(
                     "Unsupported timeRange '%s'. Use: 24h | 7d | 30d | all".formatted(timeRange));
         };
     }
 
-    private record TimeWindow(LocalDateTime from, LocalDateTime to, String granularity) {}
+    private record TimeWindow(LocalDateTime from, LocalDateTime to, String granularity) {
+    }
 }
