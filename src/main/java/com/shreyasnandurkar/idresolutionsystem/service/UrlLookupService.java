@@ -5,6 +5,7 @@ import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -18,8 +19,13 @@ public class UrlLookupService {
 
     @Cacheable(value = "urlCache", key = "#shortKey")
     public String getOriginalUrl(String shortKey) {
+        if (!StringUtils.hasText(shortKey)) {
+            throw new IllegalArgumentException("shortKey must not be blank");
+        }
+
         WebsiteUrl entity = repository.findByShortKey(shortKey);
-        if (entity == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid URL");
+        if (entity == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid URL");
         return entity.getOriginalUrl();
     }
 }

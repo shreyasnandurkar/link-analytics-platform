@@ -6,16 +6,19 @@ import com.shreyasnandurkar.idresolutionsystem.entity.GeoLocation;
 import com.shreyasnandurkar.idresolutionsystem.entity.VisitorFingerprint;
 import com.shreyasnandurkar.idresolutionsystem.repository.ClickEventRepository;
 import com.shreyasnandurkar.idresolutionsystem.repository.VisitorFingerprintRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 
 @Service
+@Slf4j
 public class AnalyticsService {
     private final ClickEventRepository clickEventRepository;
     private final VisitorFingerprintRepository fingerprintRepository;
@@ -31,9 +34,18 @@ public class AnalyticsService {
 
     @Async("analyticsExecutor")
     public void recordClick(String shortKey, String rawIp) {
-        String ipHash = hashIpAddress(rawIp);
-        GeoLocation location = geoIPService.lookup(rawIp);
-        self.persistClick(shortKey, ipHash, location);
+        try {
+            if (!StringUtils.hasText(rawIp)) {
+                log.warn("Skipping click tracking for shortKey={} because IP address is blank", shortKey);
+                return;
+            }
+
+            String ipHash = hashIpAddress(rawIp);
+            GeoLocation location = geoIPService.lookup(rawIp);
+            self.persistClick(shortKey, ipHash, location);
+        } catch (Exception ex) {
+            log.error("Failed to record click for shortKey={}", shortKey, ex);
+        }
     }
 
     @Transactional
@@ -53,6 +65,7 @@ public class AnalyticsService {
             fingerprintRepository.save(new VisitorFingerprint(shortKey, ipHash));
             return true;
         } catch (DataIntegrityViolationException e) {
+            log.debug("Visitor fingerprint already exists for shortKey={}", shortKey);
             return false;
         }
     }

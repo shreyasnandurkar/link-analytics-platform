@@ -9,6 +9,8 @@ import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Slf4j
@@ -28,6 +30,7 @@ public class URLShortenerService {
         this.keyStore = keyStore;
     }
 
+    @Transactional
     public String createShortLink(String originalUrl, LinkType type) {
         String shortKey = null;
         boolean saved = false;
@@ -39,7 +42,7 @@ public class URLShortenerService {
             keyStore.addKey(candidate);
 
             try {
-                repository.save(new WebsiteUrl(originalUrl, candidate, type));
+                repository.saveAndFlush(new WebsiteUrl(originalUrl, candidate, type));
                 shortKey = candidate;
                 saved = true;
             } catch (DataIntegrityViolationException e) {
@@ -56,6 +59,10 @@ public class URLShortenerService {
     }
 
     public String redirectUrl(String shortKey, String ip) {
+
+        if (!StringUtils.hasText(shortKey)) {
+            throw new IllegalArgumentException("shortKey must not be blank");
+        }
 
         if (!keyStore.contains(shortKey)) {
             throw new ShortKeyNotFoundException("No link found for key: " + shortKey);

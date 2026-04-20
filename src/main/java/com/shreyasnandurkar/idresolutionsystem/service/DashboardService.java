@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 
 @Slf4j
@@ -49,13 +50,17 @@ public class DashboardService {
                 dashboardExecutor
         );
 
-        CompletableFuture.allOf(totalsFuture, countriesFuture, citiesFuture).join();
+        try {
+            CompletableFuture.allOf(totalsFuture, countriesFuture, citiesFuture).join();
 
-        return new DashboardResponse(
-                totalsFuture.join(),
-                countriesFuture.join(),
-                citiesFuture.join()
-        );
+            return new DashboardResponse(
+                    totalsFuture.join(),
+                    countriesFuture.join(),
+                    citiesFuture.join());
+        } catch (CompletionException ex) {
+            log.error("Failed to load dashboard analytics for shortKey={} timeRange={}", shortKey, timeRange, ex);
+            throw new IllegalStateException("Failed to load dashboard analytics", ex);
+        }
     }
 
     private TimeWindow resolveWindow(String timeRange) {
