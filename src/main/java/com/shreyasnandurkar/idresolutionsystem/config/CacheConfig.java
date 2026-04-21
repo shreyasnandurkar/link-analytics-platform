@@ -15,11 +15,18 @@ public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("urlCache");
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager("urlCache", "dashboardAnalyticsCache");
         cacheManager.registerCustomCache("urlCache",
                 Caffeine.newBuilder()
                         .maximumSize(50_000)
                         .expireAfterWrite(Duration.ofHours(24))
+                        .recordStats()
+                        .build());
+
+        cacheManager.registerCustomCache("dashboardAnalyticsCache",
+                Caffeine.newBuilder()
+                        .maximumSize(10_000)
+                        .expireAfterWrite(Duration.ofMinutes(1))
                         .recordStats()
                         .build());
 
