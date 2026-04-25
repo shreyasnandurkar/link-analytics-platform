@@ -1,10 +1,7 @@
 package com.shreyasnandurkar.idresolutionsystem.repository;
 
 
-import com.shreyasnandurkar.idresolutionsystem.entity.CityStats;
-import com.shreyasnandurkar.idresolutionsystem.entity.ClickEvent;
-import com.shreyasnandurkar.idresolutionsystem.entity.ClickStats;
-import com.shreyasnandurkar.idresolutionsystem.entity.CountryStats;
+import com.shreyasnandurkar.idresolutionsystem.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,7 +29,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, UUID> {
     );
 
     @Query(value = """
-            SELECT c.country AS country,
+                SELECT c.country AS country,
                    COUNT(*) AS total,
                    COUNT(*) FILTER (WHERE c.new_visitor = true) AS new_visitors
             FROM click_event c
@@ -68,4 +65,13 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, UUID> {
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    @Query(value = """
+    SELECT 
+        COUNT(*) AS total_clicks,
+        COUNT(DISTINCT c.ip_address_hash) AS unique_clicks
+    FROM click_event c
+    WHERE c.short_key = :shortKey
+    """, nativeQuery = true)
+    LifetimeTotals getLifetimeTotals(@Param("shortKey") String shortKey);
 }
