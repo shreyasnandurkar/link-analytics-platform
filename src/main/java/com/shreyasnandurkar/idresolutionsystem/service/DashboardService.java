@@ -1,9 +1,6 @@
 package com.shreyasnandurkar.idresolutionsystem.service;
 
-import com.shreyasnandurkar.idresolutionsystem.entity.CityStats;
-import com.shreyasnandurkar.idresolutionsystem.entity.ClickStats;
-import com.shreyasnandurkar.idresolutionsystem.entity.CountryStats;
-import com.shreyasnandurkar.idresolutionsystem.entity.DashboardResponse;
+import com.shreyasnandurkar.idresolutionsystem.entity.*;
 import com.shreyasnandurkar.idresolutionsystem.repository.ClickEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -30,7 +27,8 @@ public class DashboardService {
     }
 
     @Cacheable(value = "dashboardAnalyticsCache", key = "#shortKey + '_' + #timeRange", sync = true)
-    public DashboardResponse getAnalytics(String shortKey, String timeRange) {
+    public DashboardResponse getDashboard(String shortKey, String timeRange) {
+
         log.debug("Cache miss – querying DB for shortKey={} timeRange={}", shortKey, timeRange);
 
         TimeWindow window = resolveWindow(timeRange);
@@ -50,14 +48,23 @@ public class DashboardService {
                 dashboardExecutor
         );
 
+        CompletableFuture<LifetimeTotals> lifetimeFuture = CompletableFuture.supplyAsync(
+                () -> clickEventRepository.getLifetimeTotals(shortKey),
+                dashboardExecutor
+        );
+
         try {
-            CompletableFuture.allOf(totalsFuture, countriesFuture, citiesFuture).join();
+            CompletableFuture.allOf(totalsFuture, countriesFuture, citiesFuture, lifetimeFuture).join();
+            LifetimeTotals lifetime = lifetimeFuture.join();
 
             return new DashboardResponse(
+                    lifetime.getTotalClicks(),
+                    lifetime.getUniqueClicks(),
                     totalsFuture.join(),
                     countriesFuture.join(),
-                    citiesFuture.join());
-        } catch (CompletionException ex) {
+                    citiesFuture.join()
+            );
+        }catch (CompletionException ex) {
             log.error("Failed to load dashboard analytics for shortKey={} timeRange={}", shortKey, timeRange, ex);
             throw new IllegalStateException("Failed to load dashboard analytics", ex);
         }
