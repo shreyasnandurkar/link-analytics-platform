@@ -1,4 +1,15 @@
 package com.shreyasnandurkar.idresolutionsystem.entity;
 
-public record CreateRequest(String originalUrl) {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+public record CreateRequest(
+
+        @NotBlank(message = "URL m")
+        @Pattern(
+                regexp = "^https?://.*",
+                message = "URL must start with http:// or https://"
+        )
+        String originalUrl
+) {
 }
