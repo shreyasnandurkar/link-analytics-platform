@@ -10,16 +10,15 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "click_event", indexes = {
-        @Index(name = "idx_click_short_key_clicked_at", columnList = "short_key, clicked_at"),
-        @Index(name = "idx_click_sk_ca_country", columnList = "short_key, clicked_at, country, new_visitor"),
-        @Index(name = "idx_click_sk_ca_city", columnList = "short_key, clicked_at, city, country, new_visitor")
+        @Index(name = "idx_click_sk_ca_city", columnList = "short_key, clicked_at, country, city, new_visitor")
 })
 @Getter
 @NoArgsConstructor
 public class ClickEvent {
 
     @Id
-    private UUID clickId;
+    @GeneratedValue
+    private Long clickId;
 
     @Column(name = "short_key", nullable = false)
     private String shortKey;
@@ -39,13 +38,17 @@ public class ClickEvent {
     @Column(name = "new_visitor")
     private boolean newVisitor;
 
-    public ClickEvent(String shortKey, String ipAddressHash, String city, String country, boolean newVisitor) {
-        this.clickId = UuidCreator.getTimeOrderedEpoch();
+    @Column(name = "is_mobile")
+    private boolean isMobile;
+
+    public ClickEvent(String shortKey, String ipAddressHash, String city, String country, boolean newVisitor,
+                      boolean isMobile) {
         this.shortKey = shortKey;
         this.clickedAt = LocalDateTime.now();
         this.ipAddressHash = ipAddressHash;
         this.city = city;
         this.country = country;
         this.newVisitor = newVisitor;
+        this.isMobile = isMobile;
     }
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "visitor_fingerprint",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_visitor_shortKey_ipHash",
+                name = "uk_visitor_shortkey_iphash",
                 columnNames = {"short_key", "ip_address_hash"}
         ),
         indexes = @Index(

@@ -11,7 +11,10 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "website_url",
-        indexes = @Index(name = "idx_short_key", columnList = "short_Key")
+        indexes = {
+                @Index(name = "idx_short_key", columnList = "short_Key"),
+                @Index(name = "idx_user_created", columnList = "user_id, created_at")
+        }
 )
 @Getter
 @NoArgsConstructor
@@ -20,23 +23,23 @@ public class WebsiteUrl {
     @Id
     private UUID linkId;
 
-    @Column(nullable = false)
+    @Column(name = "user_id")
+    private String userId;
+
+    @Column(name = "original_url", nullable = false)
     private String originalUrl;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(name = "short_key", nullable = false, unique = true, updatable = false)
     private String shortKey;
 
-    @Enumerated(EnumType.STRING)
-    private LinkType type;
-
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public WebsiteUrl(String originalUrl, String shortKey, LinkType type) {
+    public WebsiteUrl(String originalUrl, String shortKey, String userId) {
         this.linkId = UuidCreator.getTimeOrderedEpoch();
         this.originalUrl = originalUrl;
         this.shortKey = shortKey;
-        this.type = type;
+        this.userId = userId;
     }
 
     @PrePersist

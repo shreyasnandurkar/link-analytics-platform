@@ -21,7 +21,7 @@ public class KeyStore {
 
     @PostConstruct
     public void loadKeys() {
-        List<String> keys = urlRepository.findAllshortKey();
+        List<String> keys = urlRepository.findAllShortKeys();
         keySet.addAll(keys);
     }
 
