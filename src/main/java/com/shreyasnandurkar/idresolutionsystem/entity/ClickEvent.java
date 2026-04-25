@@ -1,12 +1,10 @@
 package com.shreyasnandurkar.idresolutionsystem.entity;
 
-import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "click_event", indexes = {
