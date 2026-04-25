@@ -1,28 +1,35 @@
 app:
-  base-url: http://localhost:8080
+  base-url: ${BASE_URL}
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
 
 server:
   port: 8080
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/linksdb
-    username: postgres
-    password: postgres
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+
     hikari:
-      maximum-pool-size: 70
-      minimum-idle: 30
-      idle-timeout: 20000
-      connection-timeout: 10000
+      maximum-pool-size: 20
+      minimum-idle: 20
+      idle-timeout: 30000
+      connection-timeout: 20000
       max-lifetime: 1800000
 
   jpa:
     hibernate:
       ddl-auto: update
-
     properties:
       hibernate:
-        generate_statistics: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${ISSUER_URI}
+          jwk-set-uri: ${JWK_SET_URI}
 
   threads:
     virtual:
@@ -33,18 +40,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: metrics,health,info,prometheus
-
-
-  metrics:
-    distribution:
-      percentiles-histogram:
-        http.server.requests: true
-      percentiles:
-        http.server.requests: 0.5,0.95,0.99
+        include: metrics,health,info
 
 logging:
   level:
     org:
       hibernate:
         stat: DEBUG
+
+supabase:
+  project-url: ${PROJECT_URL}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+
+maxmind:
+  db-path: ${MAXMIND_DB_PATH}
+  license-key: ${MAXMIND_LICENSE_KEY}
