@@ -1,7 +1,6 @@
 package com.shreyasnandurkar.idresolutionsystem.exception;
 
 import com.google.zxing.WriterException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import java.time.Instant;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ShortKeyNotFoundException.class)
-    public ResponseEntity<ApiError> handleShortKeyNotFound(ShortKeyNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiError> handleShortKeyNotFound(ShortKeyNotFoundException ex) {
         log.debug("Short key not found: {}", ex.getMessage());
         return buildError(HttpStatus.NOT_FOUND, "The requested link does not exist");
     }
@@ -53,7 +52,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ApiError> handleAccessDenied() {
         return buildError(HttpStatus.FORBIDDEN, "Access denied");
     }
 
