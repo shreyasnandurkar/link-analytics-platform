@@ -22,7 +22,7 @@ public class SecurityConfig {
     private List<String> allowedOrigins;
 
     @Bean
-    public SecurityFilterChain filterChain (HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain (HttpSecurity http) {
         http
                 .headers(headers -> headers
                         .contentTypeOptions(Customizer.withDefaults())
