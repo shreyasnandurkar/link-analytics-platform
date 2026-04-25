@@ -58,12 +58,12 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldReturn500ForIOException() throws Exception {
+    void shouldReturn500ForWriterException() throws Exception {
         mockMvc.perform(get("/test/io-exception"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
-                .andExpect(jsonPath("$.message").value("Failed to generate media"))
+                .andExpect(jsonPath("$.message").value("Failed to generate QR code"))
                 .andExpect(jsonPath("$.path").value("/test/io-exception"));
     }
 
@@ -97,8 +97,8 @@ class GlobalExceptionHandlerTest {
         }
 
         @GetMapping("/io-exception")
-        String ioException() throws IOException {
-            throw new IOException("QR generation failed");
+        String ioException() throws com.google.zxing.WriterException {
+            throw new com.google.zxing.WriterException("QR generation failed");
         }
 
         @GetMapping("/unhandled")
