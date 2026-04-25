@@ -1,80 +1,103 @@
 package com.shreyasnandurkar.idresolutionsystem.controller;
 
-import com.google.zxing.WriterException;
-import com.shreyasnandurkar.idresolutionsystem.entity.CreateRequest;
-import com.shreyasnandurkar.idresolutionsystem.entity.DashboardResponse;
-import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
-import com.shreyasnandurkar.idresolutionsystem.service.BarcodeService;
+import com.shreyasnandurkar.idresolutionsystem.entity.*;
 import com.shreyasnandurkar.idresolutionsystem.service.DashboardService;
-import com.shreyasnandurkar.idresolutionsystem.service.QRCodeService;
+import com.shreyasnandurkar.idresolutionsystem.service.OwnerService;
 import com.shreyasnandurkar.idresolutionsystem.service.URLShortenerService;
+import com.shreyasnandurkar.idresolutionsystem.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
 
 @RestController
-//@RequestMapping("/v1")
 public class URLController {
     private final URLShortenerService urlShortenerService;
-    private final QRCodeService qrCodeService;
-    private final BarcodeService barcodeService;
     private final DashboardService dashboardService;
+    private final OwnerService ownerService;
+    private final UserService userService;
 
-    public URLController(URLShortenerService urlShortenerService, QRCodeService qrCodeService,
-                         BarcodeService barcodeService, DashboardService dashboardService) {
+
+    public URLController(URLShortenerService urlShortenerService,
+                         DashboardService dashboardService, OwnerService ownerService, UserService userService) {
         this.urlShortenerService = urlShortenerService;
-        this.qrCodeService = qrCodeService;
-        this.barcodeService = barcodeService;
         this.dashboardService = dashboardService;
+        this.ownerService = ownerService;
+        this.userService = userService;
     }
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("OK");
+        return ResponseEntity.ok("GoLinkGone OK");
     }
 
     @GetMapping("/info")
     public ResponseEntity<String> info() {
-        return ResponseEntity.ok("This is a URL Shortener API");
+        return ResponseEntity.ok("This is GoLineGone :P");
     }
 
-    @PostMapping("/shorten")
-    public ResponseEntity<String> createShortLink(@RequestBody CreateRequest request) {
-        String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.SHORT_LINK);
-        return ResponseEntity.ok(shortUrl);
+    @PostMapping("/create")
+    public ResponseEntity<CreateResponse> createShortLink(@Valid @RequestBody CreateRequest request,
+                                                          @AuthenticationPrincipal Jwt jwt) {
+
+        String userId = (jwt != null) ? jwt.getSubject() : null;
+        CreateResponse response = urlShortenerService.createShortLink(request.originalUrl(), userId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{shortKey}")
     public ResponseEntity<Void> redirectUrl(@PathVariable String shortKey, HttpServletRequest request) {
+
         String ip = Optional.ofNullable(request.getHeader("X-Forwarded-For"))
                 .map(x -> x.split(",")[0].trim())
                 .orElse(request.getRemoteAddr());
-        String originalUrl = urlShortenerService.redirectUrl(shortKey, ip);
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(originalUrl)).build();
+
+        String userAgent = request.getHeader("User-Agent");
+
+        String originalUrl = urlShortenerService.redirectUrl(shortKey, ip, userAgent);
+        return ResponseEntity.status(302).location(URI.create(originalUrl)).build();
     }
 
-    @PostMapping("/qr")
-    public ResponseEntity<byte[]> createQRCode(@RequestBody CreateRequest request) throws IOException, WriterException {
-        String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.QR_CODE);
-        byte[] qrcode = qrCodeService.generateQrImage(shortUrl, 200, 200);
-        return ResponseEntity.ok().header("Content-Type", "image/png").body(qrcode);
+    @GetMapping("/my-links")
+    public ResponseEntity<Page<LinkItemResponse>> getMyLinks(@AuthenticationPrincipal Jwt jwt,
+                                                 @RequestParam(defaultValue = "0")int page,
+                                                 @RequestParam(defaultValue = "30")int size){
+
+
+        Page<LinkItemResponse> links = urlShortenerService.getUserLinks(jwt.getSubject(), page, size);
+        return ResponseEntity.ok(links);
     }
 
-    @PostMapping("/barcode")
-    public ResponseEntity<byte[]> createBarCode(@RequestBody CreateRequest request) throws IOException,
-            WriterException {
-        String shortUrl = urlShortenerService.createShortLink(request.originalUrl(), LinkType.BARCODE);
-        byte[] barcode = barcodeService.generateBarcode(shortUrl, 200, 200);
-        return ResponseEntity.ok().header("Content-Type", "image/png").body(barcode);
-    }
+    @GetMapping("/{shortKey}/dashboard")
+    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String shortKey, @RequestParam(defaultValue =
+            "24h") String timeRange, @AuthenticationPrincipal Jwt jwt) {
 
-    public ResponseEntity<DashboardResponse> getDashboard(@PathVariable String shortKey, @RequestParam(defaultValue = "24h") String timeRange) {
-        DashboardResponse response = dashboardService.getAnalytics(shortKey, timeRange);
+        if (!ownerService.isOwner(shortKey, jwt.getSubject())) {
+            throw new AccessDeniedException("Access Denied");
+        }
+
+        DashboardResponse response = dashboardService.getDashboard(shortKey, timeRange);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{shortKey}")
+    public ResponseEntity<Void> deleteLink(@PathVariable String shortKey, @AuthenticationPrincipal Jwt jwt) {
+
+        urlShortenerService.deleteLink(shortKey, jwt.getSubject());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/account")
+    public ResponseEntity<Void> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
+        userService.deleteAccount(jwt.getSubject());
+        return ResponseEntity.noContent().build();
+    }
+
 }

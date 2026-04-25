@@ -1,16 +1,27 @@
 package com.shreyasnandurkar.idresolutionsystem.service;
 
+import com.shreyasnandurkar.idresolutionsystem.entity.ResolvedLink;
+import org.springframework.cache.Cache;
+import com.google.zxing.WriterException;
 import com.shreyasnandurkar.idresolutionsystem.config.AppProperties;
 import com.shreyasnandurkar.idresolutionsystem.config.KeyStore;
-import com.shreyasnandurkar.idresolutionsystem.entity.LinkType;
+import com.shreyasnandurkar.idresolutionsystem.entity.CreateResponse;
+import com.shreyasnandurkar.idresolutionsystem.entity.LinkItemResponse;
 import com.shreyasnandurkar.idresolutionsystem.entity.WebsiteUrl;
 import com.shreyasnandurkar.idresolutionsystem.exception.ShortKeyNotFoundException;
 import com.shreyasnandurkar.idresolutionsystem.repository.WebsiteUrlRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
 
 @Service
 @Slf4j
@@ -19,19 +30,23 @@ public class URLShortenerService {
     private final WebsiteUrlRepository repository;
     private final AnalyticsService analyticsService;
     private final UrlLookupService urlLookupService;
+    private final QRCodeService qrService;
     private final KeyStore keyStore;
+    private final CacheManager cacheManager;
 
     public URLShortenerService(AppProperties appProperties, WebsiteUrlRepository repository,
-                               AnalyticsService analyticsService, UrlLookupService urlLookupService, KeyStore keyStore) {
+                               AnalyticsService analyticsService, UrlLookupService urlLookupService,
+                               KeyStore keyStore, QRCodeService qrService, CacheManager cacheManager) {
         this.appProperties = appProperties;
         this.repository = repository;
         this.analyticsService = analyticsService;
         this.urlLookupService = urlLookupService;
         this.keyStore = keyStore;
+        this.qrService = qrService;
+        this.cacheManager = cacheManager;
     }
 
-    @Transactional
-    public String createShortLink(String originalUrl, LinkType type) {
+    public CreateResponse createShortLink(String originalUrl, String userId) {
         String shortKey = null;
         boolean saved = false;
 
@@ -42,7 +57,7 @@ public class URLShortenerService {
             keyStore.addKey(candidate);
 
             try {
-                repository.saveAndFlush(new WebsiteUrl(originalUrl, candidate, type));
+                repository.saveAndFlush(new WebsiteUrl(originalUrl, candidate, userId));
                 shortKey = candidate;
                 saved = true;
             } catch (DataIntegrityViolationException e) {
@@ -54,23 +69,76 @@ public class URLShortenerService {
                 throw e;
             }
         }
+        String shortUrl = appProperties.getBaseUrl() + "/" + shortKey;
+        byte[] qrCode = new byte[0];
+        try {
+            qrCode = qrService.generateQrImage(shortUrl, 200, 200);
+        } catch (IOException | WriterException e) {
+            log.error("Failed to generate QR code for short-key: {}", shortUrl);
+        }
 
-        return appProperties.getBaseUrl() + "/" + shortKey;
+        return new CreateResponse(shortUrl, qrCode);
     }
 
-    public String redirectUrl(String shortKey, String ip) {
+    public String redirectUrl(String shortKey, String ip, String userAgent) {
 
         if (!StringUtils.hasText(shortKey)) {
             throw new IllegalArgumentException("shortKey must not be blank");
         }
 
         if (!keyStore.contains(shortKey)) {
-            throw new ShortKeyNotFoundException("No link found for key: " + shortKey);
+            throw new ShortKeyNotFoundException("Invalid Link");
         }
 
-        String originalUrl = urlLookupService.getOriginalUrl(shortKey);
-        analyticsService.recordClick(shortKey, ip);
-        return originalUrl;
+        ResolvedLink resolved = urlLookupService.resolveUrl(shortKey);
+        if(resolved.hasOwner()){
+            analyticsService.recordClick(shortKey, ip, userAgent);
+        }
+
+        return resolved.originalUrl();
+    }
+
+    public Page<LinkItemResponse> getUserLinks(String userId, int page, int size){
+        Pageable pageable = createPage(page, size);
+        Page<LinkItemResponse> rawLinks = repository.findUserLinks(userId, pageable);
+
+        return rawLinks.map(link -> new LinkItemResponse(
+                link.shortKey(),
+                appProperties.getBaseUrl() + link.shortKey(),
+                link.originalUrl(),
+                link.createdAt()
+        ));
+    }
+
+    private Pageable createPage(int page, int size){
+        return (PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+    }
+
+    @Transactional
+    public void deleteLink(String shortKey, String userId) {
+        int deletedRows = repository.deleteByShortKeyAndUserId(shortKey, userId);
+
+        if (deletedRows > 0) {
+            keyStore.removeKey(shortKey);
+
+            Cache urlCache = cacheManager.getCache("urlCache");
+            if (urlCache != null) urlCache.evict(shortKey);
+
+            Cache analyticsCache = cacheManager.getCache("dashboardAnalyticsCache");
+            if (analyticsCache != null) {
+                analyticsCache.evict(shortKey + "_24h");
+                analyticsCache.evict(shortKey + "_7d");
+                analyticsCache.evict(shortKey + "_30d");
+                analyticsCache.evict(shortKey + "_all");
+            }
+
+            Cache ownershipCache = cacheManager.getCache("ownershipCache");
+            if (ownershipCache != null) {
+                ownershipCache.evict(shortKey + "_" + userId);
+            }
+        } else {
+            throw new ShortKeyNotFoundException("Link not found or access denied");
+        }
     }
 
 }

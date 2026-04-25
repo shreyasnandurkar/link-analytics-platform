@@ -6,7 +6,6 @@ public class ShortKeyGenerator {
     private static final SecureRandom random = new SecureRandom();
 
     private ShortKeyGenerator() {
-        /* This utility class should not be instantiated */
     }
 
     public static String generateShortKey() {
